@@ -1,6 +1,6 @@
 # AI — Cards on the Table
 
-A browser-based, persona-driven conversation activity for exploring how people in higher education relate to generative AI — the ways they use it, depend on it, avoid it, and quietly struggle with it.
+Experimental browser-based, persona-driven conversation activity for exploring how people in higher education relate to generative AI — the ways they use it, depend on it, avoid it, and quietly struggle with it.
 
 Developed by **Tim Hall**, Senior Manager: Product Innovation, University of London Worldwide, for the *Moving Targets* BLE workshop, March 2025.
 
