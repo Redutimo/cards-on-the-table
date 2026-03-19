@@ -22,7 +22,7 @@ The activity is designed to open up honest, low-stakes conversations about GenAI
 
 ## How to use it
 
-Open the link in any browser. No installation, no login, no data collected.
+Open the link (https://redutimo.github.io/cards-on-the-table/) in any browser. No installation, no login, no data collected.
 
 > **Projection tip:** best viewed at 100% zoom in full-screen Chrome (F11). The layout is optimised for 1920×1080.
 
