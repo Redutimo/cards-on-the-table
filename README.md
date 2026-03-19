@@ -22,7 +22,7 @@ The activity is designed to open up honest, low-stakes conversations about GenAI
 
 ## How to use it
 
-Open the link (https://github.com/Redutimo/cards-on-the-table) in any browser. No installation, no login, no data collected.
+Open the link (https://redutimo.github.io/cards-on-the-table/) in any browser. No installation, no login, no data collected.
 
 - A splash screen presents the two deck options on arrival
 - Choose a deck — the cards deal immediately
