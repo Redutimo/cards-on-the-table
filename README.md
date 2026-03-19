@@ -1,6 +1,6 @@
 # AI — Cards on the Table
 
-Experimental browser-based, persona-driven conversation activity for exploring how people in higher education relate to generative AI — the ways they use it, depend on it, avoid it, and quietly struggle with it.
+A browser-based, persona-driven conversation activity for exploring how people in higher education relate to generative AI — the ways they use it, depend on it, avoid it, and quietly struggle with it.
 
 Developed by **Tim Hall**, Senior Manager: Product Innovation, University of London Worldwide, for the *Moving Targets* BLE workshop, March 2025.
 
@@ -8,35 +8,43 @@ Developed by **Tim Hall**, Senior Manager: Product Innovation, University of Lon
 
 ## What it is
 
-Ten cards. Ten characters. Each one works in higher education and has a complicated relationship with AI.
+Two decks. Twenty characters. Each with a complicated relationship with AI.
 
-Each persona represents a real pattern of behaviour — the enthusiastic reinventor, the quiet achiever hiding behind AI-prepared briefings, the traditionalist watching colleagues pull ahead, the person who got an HR warning for something they didn't know was wrong. None of them are wrong. All of them are worth talking about.
+Choose the **HE Staff** deck to explore how colleagues across higher education navigate AI in their working lives — the enthusiastic adopter, the quiet achiever hiding behind AI-prepared briefings, the traditionalist watching peers pull ahead, the person who got an HR warning for something they didn't know was wrong.
 
-The activity is designed to open up honest, low-stakes conversations about GenAI in the workplace — particularly for those in supporting roles: digital education, library services, academic and student support.
+Choose the **Students** deck to explore how learners navigate AI in their studies — the ghost-writer wrestling with guilt, the overwhelmed mature student who depends on AI to keep up, the student who got referred for misconduct after using AI in good faith.
+
+Each persona represents a real pattern of behaviour. None of them are wrong. All of them are worth talking about.
+
+The activity is designed to open up honest, low-stakes conversations about GenAI — particularly for those in supporting roles: digital education, library services, academic and student support.
 
 ---
 
 ## How to use it
 
-Open the link (https://redutimo.github.io/cards-on-the-table/) in any browser. No installation, no login, no data collected.
+Open the link (https://github.com/Redutimo/cards-on-the-table) in any browser. No installation, no login, no data collected.
 
-- A splash screen explains the activity on arrival
-- Cards are dealt face-down on an animated starfield
+- A splash screen presents the two deck options on arrival
+- Choose a deck — the cards deal immediately
+- Cards are displayed face-down on an animated starfield
 - Click any card to flip it and reveal the persona
 - A modal opens with the character's story, their shadow thought, and three discussion questions
-- Use the **?** button (bottom-right) to revisit the instructions at any time
+- Use the **deck name** button (bottom-right) to switch decks or return to the chooser at any time
 - Use **Flip All Cards Back** to reset for a new round
 
 **Suggested facilitation approaches:**
 
-- *Individual draw* — each participant picks a card that resonates with their own experience
+- *Individual draw* — each participant picks a card that resonates with their own experience or practice
 - *Role rotation* — small groups each take a card and present that persona's dilemma to the room
 - *Dual lens* — for each card, ask both "does this resonate with me?" and "do I recognise this in the people I support?"
 - *Selective deal* — with limited time, allocate 3–4 cards across small groups rather than working through all ten
+- *Deck swap* — run the HE Staff deck with a team, then switch to the Students deck and ask: "how would you respond to this student?"
 
 ---
 
-## The personas
+## The decks
+
+### HE Staff
 
 | Card | Persona | Theme |
 |------|---------|-------|
@@ -51,6 +59,21 @@ Open the link (https://redutimo.github.io/cards-on-the-table/) in any browser. N
 | Wheel of Fortune · X | Chen, the Experimenter | Blurred boundaries, unpredictable effects |
 | The Tower · XVI | Sam, the Disrupted | Policy confusion, digital shame |
 
+### Students
+
+| Card | Persona | Theme |
+|------|---------|-------|
+| The Magician · I | Priya, the Ghost-Writer | Academic integrity guilt, imposter syndrome |
+| The High Priestess · II | Kai, the Confessor | AI as substitute for mental health support |
+| The Empress · III | Amara, the Juggler | Equity and access, surface vs deep learning |
+| The Emperor · IV | Marcus, the Performer | Identity and voice, authenticity in assessment |
+| The Hierophant · V | Rosa, the Refuser | Values under pressure, perceived disadvantage |
+| The Lovers · VI | Jamie, the Companion | Supervision gaps, parasocial AI relationships |
+| The Chariot · VII | Dev, the Automator | Shallow learning, exam unpreparedness |
+| The Hermit · IX | Yemi, the Invisible | Help-avoidance, masking real struggle |
+| Wheel of Fortune · X | Seren, the Drifter | Inconsistent guidance, self-doubt |
+| The Tower · XVI | Theo, the Accused | Policy opacity, disproportionate consequences |
+
 ---
 
 ## Adapting it
@@ -60,6 +83,7 @@ The activity is designed to be taken away and reused. You are welcome to:
 - Run it with your own teams, colleagues or students
 - Use individual personas as standalone discussion prompts
 - Adapt the discussion questions for your own institutional context
+- Use one deck or both in the same session
 
 If you do use or adapt it, a credit back to this repository is appreciated but not required.
 
@@ -69,7 +93,7 @@ If you do use or adapt it, a credit back to this repository is appreciated but n
 
 The activity is a single self-contained HTML file. All card images are embedded as base64 — no external assets or internet connection required once downloaded. It runs entirely in the browser with no server-side components and collects no data.
 
-Built with vanilla HTML, CSS, and JavaScript. Canvas-based animated background (starfield + aurora). Card flip animations and particle effects are CSS/JS only.
+Built with vanilla HTML, CSS, and JavaScript. Canvas-based animated background (starfield + aurora nebula). Card flip animations, particle burst effects, and foil shimmer are CSS/JS only.
 
 ---
 
