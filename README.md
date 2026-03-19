@@ -2,7 +2,7 @@
 
 A browser-based, persona-driven conversation activity for exploring how people in higher education relate to generative AI — the ways they use it, depend on it, avoid it, and quietly struggle with it.
 
-Developed by **Tim Hall**, Senior Manager: Product Innovation, University of London Worldwide, for the *Moving Targets* BLE workshop, March 2025.
+Developed by **Tim Hall**, Senior Manager: Product Innovation, University of London Worldwide, for the *Moving Targets* BLE workshop, March 2026.
 
 ---
 
@@ -103,4 +103,4 @@ If you use this activity and have suggestions, additions, or new personas to pro
 
 ---
 
-*Created for the Moving Targets workshop, Bloomsbury Learning Exchange, March 2025.*
+*Created for the Moving Targets workshop, Bloomsbury Learning Exchange, March 2026.*
