@@ -22,13 +22,16 @@ The activity is designed to open up honest, low-stakes conversations about GenAI
 
 ## How to use it
 
-Open the link (https://redutimo.github.io/cards-on-the-table/) in any browser. No installation, no login, no data collected.
+Open the link in any browser. No installation, no login, no data collected.
+
+> **Projection tip:** best viewed at 100% zoom in full-screen Chrome (F11). The layout is optimised for 1920×1080.
 
 - A splash screen presents the two deck options on arrival
 - Choose a deck — the cards deal immediately
 - Cards are displayed face-down on an animated starfield
 - Click any card to flip it and reveal the persona
 - A modal opens with the character's story, their shadow thought, and three discussion questions
+- Press **Escape** or click outside the modal to close it
 - Use the **deck name** button (bottom-right) to switch decks or return to the chooser at any time
 - Use **Flip All Cards Back** to reset for a new round
 
