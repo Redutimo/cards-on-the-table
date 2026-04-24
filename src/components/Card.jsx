@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { TAROT } from '../data/tarotArt';
+import { getCardArt, CARD_BACK_SVG } from '../data/tarotArt';
 
 export default function Card({ card, onClick, isFlipped }) {
   const cardRef = useRef(null);
@@ -87,7 +87,7 @@ export default function Card({ card, onClick, isFlipped }) {
     };
   }, [isFlipped]);
 
-  const svgArt = TAROT[card.id] || '';
+  const svgArt = getCardArt(card.id);
   
   // Set noise texture URL for the card mask
   const noiseUrl = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
@@ -98,7 +98,9 @@ export default function Card({ card, onClick, isFlipped }) {
         
         {/* Front Face (Tarot Art) */}
         <div className="face face-front">
-          <div className="art" dangerouslySetInnerHTML={{ __html: svgArt }} />
+          <div className="art">
+            <svg viewBox="0 0 340 520" preserveAspectRatio="none" dangerouslySetInnerHTML={{ __html: svgArt }} />
+          </div>
           <div className="iri" />
           <div className="spec" />
           <div className="noise" />
@@ -108,14 +110,7 @@ export default function Card({ card, onClick, isFlipped }) {
         {/* Back Face (Card Back) */}
         <div className="face face-back">
           <div className="art">
-            {/* Simple geometric back pattern similar to the original */}
-            <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
-              <rect width="400" height="600" fill="currentColor"/>
-              <circle cx="200" cy="300" r="140" fill="none" stroke="var(--violet)" strokeWidth="4"/>
-              <circle cx="200" cy="300" r="130" fill="none" stroke="var(--gold-tarot)" strokeWidth="1"/>
-              <path d="M 200 100 L 300 300 L 200 500 L 100 300 Z" fill="none" stroke="var(--gold-tarot)" strokeWidth="2"/>
-              <circle cx="200" cy="300" r="40" className="violetAccent"/>
-            </svg>
+            <svg viewBox="0 0 340 520" preserveAspectRatio="none" dangerouslySetInnerHTML={{ __html: CARD_BACK_SVG }} />
           </div>
           <div className="iri" style={{ mixBlendMode: 'color-dodge', opacity: 0.5 }} />
           <div className="noise" />
