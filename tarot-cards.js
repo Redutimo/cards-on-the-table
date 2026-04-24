@@ -4,7 +4,8 @@
 // Shared frame + corner ornaments + title are added by a wrapper so each
 // card only provides its unique figure content.
 
-export const TAROT = {};
+(function(){
+  const TAROT = {};
 
   // Shared frame + corner ornaments — wraps each card's unique content
   function frame(numeral, title, inner) {
@@ -613,67 +614,5 @@ export const TAROT = {};
     tower: 'The Tower',
   };
 
-function buildBackSVG() {
-  let s = `<g stroke="currentColor" fill="none" color="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="14" y="14" width="312" height="492" rx="16" stroke-width="4"/>
-    <rect x="24" y="24" width="292" height="472" rx="11" stroke-width="1.2"/>`;
-
-  for (const [x, y] of [[34,34],[306,34],[34,486],[306,486]]) {
-    s += `<g transform="translate(${x} ${y})" stroke-width="1.4"><path d="M 0 -7 L 2 -2 L 7 0 L 2 2 L 0 7 L -2 2 L -7 0 L -2 -2 Z" fill="currentColor"/></g>`;
-  }
-
-  s += `<g transform="translate(170 260)"><g stroke-width="3" stroke-linecap="round">`;
-  for (let i = 0; i < 32; i++) {
-    const a = (i / 32) * Math.PI * 2;
-    const deg = (a * 180 / Math.PI + 360) % 360;
-    const nearVertical = (deg > 80 && deg < 100) || (deg > 260 && deg < 280);
-    const r1 = nearVertical ? 175 : 92;
-    const r2 = i % 3 === 0 ? 205 : (nearVertical ? 210 : 176);
-    s += `<line x1="${(Math.cos(a)*r1).toFixed(1)}" y1="${(Math.sin(a)*r1).toFixed(1)}" x2="${(Math.cos(a)*r2).toFixed(1)}" y2="${(Math.sin(a)*r2).toFixed(1)}"/>`;
-  }
-  s += `</g></g>`;
-
-  s += `<g transform="translate(170 260)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="0" cy="-140" r="8" fill="currentColor"/>
-    <rect x="-4" y="-132" width="8" height="26" fill="currentColor" stroke="none"/>
-    <path d="M -86 -106 C -60 -114 -30 -108 0 -108 C 30 -108 60 -114 86 -106" stroke-width="3"/>
-    <path d="M -86 -106 C -94 -104 -96 -96 -90 -90 C -84 -86 -78 -92 -80 -98" stroke-width="2"/>
-    <path d="M  86 -106 C  94 -104  96 -96  90 -90 C  84 -86  78 -92  80 -98" stroke-width="2"/>
-    <path d="M -5 -106 L -3 140 L 0 150 L 3 140 L 5 -106 Z" fill="currentColor" stroke="currentColor"/>
-    <g stroke-width="1.2" stroke-linecap="round" fill="none">
-      <path d="M -66 -106 L -66 -58"/>
-      <path d="M -46 -106 L -58 -58"/>
-      <path d="M  66 -106 L  66 -58"/>
-      <path d="M  46 -106 L  58 -58"/>
-    </g>
-    <g transform="translate(-62 -52)">
-      <path d="M -24 0 C -22 14 -12 22 0 22 C 12 22 22 14 24 0 Z" fill="currentColor" stroke="currentColor" stroke-width="1.2"/>
-      <path d="M -24 0 L 24 0" stroke-width="1.6"/>
-      <g transform="translate(0 10)"><path d="M -6 -4 A 7 7 0 1 0 -6 4 A 5 5 0 1 1 -6 -4 Z" stroke="none" fill="currentColor"/></g>
-    </g>
-    <g transform="translate(62 -52)">
-      <path d="M -24 0 C -22 14 -12 22 0 22 C 12 22 22 14 24 0 Z" fill="currentColor" stroke="currentColor" stroke-width="1.2"/>
-      <path d="M -24 0 L 24 0" stroke-width="1.6"/>
-      <g transform="translate(0 9)" fill="none" stroke-width="1.3">
-        <path d="M -8 2 A 8 8 0 0 1 8 2 Z" fill="currentColor"/>
-        <path d="M -11 -2 L -14 -5 M -8 -6 L -9 -10 M 0 -8 L 0 -12 M 8 -6 L 9 -10 M 11 -2 L 14 -5"/>
-      </g>
-    </g>
-  </g>`;
-
-  s += `<g stroke-width="1.3" stroke-linecap="round">`;
-  for (const [x, y] of [[82,80],[258,80],[70,160],[270,160],[80,360],[260,360],[90,440],[250,440],[140,90],[200,90],[150,440],[190,440]]) {
-    s += `<g transform="translate(${x} ${y})"><path d="M 0 -4 L 1 -1 L 4 0 L 1 1 L 0 4 L -1 1 L -4 0 L -1 -1 Z" fill="currentColor"/></g>`;
-  }
-  s += `</g></g>`;
-  return s;
-}
-
-export const CARD_BACK_SVG = buildBackSVG();
-
-const ID_MAP = { high_priestess: 'highPriestess', wheel_of_fortune: 'wheel' };
-
-export function getCardArt(id) {
-  const base = id.replace(/^s_/, '');
-  return TAROT[ID_MAP[base] || base] || '';
-}
+  window.TAROT = TAROT;
+})();

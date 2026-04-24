@@ -1,14 +1,954 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <title>AI — Cards on the Table</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>AI — Cards on the Table</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Lato:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root {
+  --bg-a: #0a0a0d;
+  --bg-b: #15151b;
+  --ink: #f4f1ea;
+  --muted: #7a7a9a;
+
+  /* Card visual — keep in sync with the reference design */
+  --iri-strength: 0.95;
+  --iri-sat: 1.6;
+  --iri-blur: 2px;
+  --iri-blend: color-dodge;
+  --spec-size: 230px;
+  --spec-strength: 0.8;
+  --spec-opacity: 1;
+  --spec-blend: overlay;
+  --noise-strength: 0.22;
+  --noise-blend: overlay;
+  --glow-strength: 0.9;
+  --glow-blur: 44px;
+  --glow-hue: 290;
+  --rim-strength: 0.7;
+
+  --paper: #000000;
+  --ink-col: #2a2118;
+  --violet: #a86bff;
+  --gold: #e6b84a;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 30%, var(--bg-b) 0%, var(--bg-a) 70%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: 'Lato', 'Helvetica Neue', Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   CARD VISUAL  (unchanged from reference)
+   ============================================================ */
+.stage {
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+  width: 280px;
+  height: 428px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.card-shell {
+  position: relative;
+  width: 280px; height: 428px;
+  transform-style: preserve-3d;
+  will-change: transform;
+  cursor: pointer;
+}
+
+.face {
+  position: absolute; inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  box-shadow:
+    0 30px 60px -20px rgba(0,0,0,.6),
+    0 10px 30px -10px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(0,0,0,.18);
+}
+.face-front {
+  background: var(--paper);
+  --mx: var(--mx-front, 50);
+  --my: var(--my-front, 50);
+}
+.face-back {
+  background: var(--violet);
+  transform: rotateY(180deg);
+  --mx: var(--mx-back, 50);
+  --my: var(--my-back, 50);
+}
+
+.art { position: absolute; inset: 0; }
+.art svg { width: 100%; height: 100%; display: block; }
+
+.iri {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  mix-blend-mode: var(--iri-blend);
+  opacity: var(--iri-strength);
+  background:
+    conic-gradient(from calc(var(--mx, 50) * 3.6deg) at calc(var(--mx,50)*1%) calc(var(--my,50)*1%),
+      oklch(88% .22 20), oklch(88% .22 80),  oklch(88% .22 140),
+      oklch(88% .22 200), oklch(88% .22 260), oklch(88% .22 320),
+      oklch(88% .22 20));
+  filter: saturate(var(--iri-sat)) blur(var(--iri-blur));
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+}
+
+.spec {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle var(--spec-size) at calc(var(--mx,50)*1%) calc(var(--my,50)*1%),
+    rgba(255,255,255,var(--spec-strength)) 0%,
+    rgba(255,255,255,.4) 18%,
+    rgba(255,255,255,0) 55%);
+  mix-blend-mode: var(--spec-blend);
+  opacity: var(--spec-opacity);
+}
+
+.noise {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: var(--noise-strength);
+  mix-blend-mode: var(--noise-blend);
+  background-image: var(--noise-url);
+  background-size: 180px 180px;
+}
+
+.rim {
+  position: absolute; inset: 0;
+  pointer-events: none; border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  background: radial-gradient(
+    120% 80% at calc(var(--mx,50)*1%) calc(var(--my,50)*1%),
+    rgba(255,255,255,.2), rgba(255,255,255,0) 60%);
+  mix-blend-mode: screen;
+  opacity: var(--rim-strength);
+}
+
+.glow {
+  position: absolute; inset: -32px; border-radius: 24px;
+  pointer-events: none;
+  transform: translateZ(-60px);
+  background: radial-gradient(
+    closest-side at calc(var(--mx,50)*1%) calc(var(--my,50)*1%),
+    oklch(80% .25 calc(var(--glow-hue) + var(--mx,50) * 1.4)) 0%,
+    oklch(70% .25 calc(var(--glow-hue) + var(--mx,50) * 1.4) / 0.5) 30%,
+    transparent 70%);
+  filter: blur(var(--glow-blur));
+  opacity: var(--glow-strength);
+  z-index: -1;
+}
+
+/* ============================================================
+   SPLASH
+   ============================================================ */
+#splash {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10,10,13,0.94);
+  backdrop-filter: blur(14px);
+  padding: 24px;
+  transition: opacity 0.35s;
+}
+#splash.hidden { opacity: 0; pointer-events: none; }
+
+.splash-inner { max-width: 560px; width: 100%; text-align: center; }
+
+.splash-eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 11px; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 16px;
+}
+.splash-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(22px, 5vw, 36px); font-weight: 700;
+  color: var(--ink); margin-bottom: 8px; line-height: 1.2;
+}
+.splash-subtitle {
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: 3px;
+  color: var(--gold); margin-bottom: 28px;
+}
+.splash-divider {
+  width: 60px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin: 0 auto 28px;
+}
+.splash-body {
+  font-size: 14px; line-height: 1.85;
+  color: rgba(244,241,234,0.7); margin-bottom: 40px;
+}
+.splash-body p { margin-bottom: 10px; }
+.splash-body em { color: rgba(244,241,234,0.88); font-style: italic; }
+
+.deck-chooser { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+.deck-btn {
+  flex: 1; min-width: 190px; max-width: 230px;
+  padding: 22px 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: var(--ink); cursor: pointer; text-align: center;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.deck-btn:hover {
+  background: rgba(168,107,255,0.1);
+  border-color: rgba(168,107,255,0.4);
+  transform: translateY(-3px);
+}
+.deck-btn-title {
+  font-family: 'Cinzel', serif;
+  font-size: 15px; font-weight: 600; margin-bottom: 10px;
+}
+.deck-btn-sub { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+/* ============================================================
+   APP CHROME
+   ============================================================ */
+#app { display: none; }
+#app.visible { display: block; }
+
+.app-header {
+  text-align: center;
+  padding: 52px 24px 36px;
+  max-width: 640px; margin: 0 auto;
+}
+.eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 5px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+.app-header h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(18px, 3.5vw, 28px); font-weight: 700;
+  color: var(--ink); margin-bottom: 18px;
+}
+.header-divider {
+  width: 60px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin: 0 auto 18px;
+}
+.app-header p {
+  font-size: 13px; color: rgba(244,241,234,0.55);
+  line-height: 1.7; margin-bottom: 18px;
+}
+.deck-badge {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--gold);
+  border: 1px solid rgba(230,184,74,0.28);
+  padding: 5px 14px; border-radius: 20px;
+}
+
+/* ============================================================
+   GRID
+   ============================================================ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 280px);
+  gap: 48px 40px;
+  justify-content: center;
+  padding: 0 40px 100px;
+}
+@media (max-width: 1600px) { .grid { grid-template-columns: repeat(4, 280px); } }
+@media (max-width: 1280px) { .grid { grid-template-columns: repeat(3, 280px); } }
+@media (max-width: 960px)  { .grid { grid-template-columns: repeat(2, 280px); gap: 40px 24px; } }
+@media (max-width: 640px)  { .grid { grid-template-columns: 280px; } }
+
+/* ============================================================
+   INFO BUTTON & FOOTER
+   ============================================================ */
+#info-btn {
+  position: fixed; top: 20px; left: 20px; z-index: 50;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--ink); font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 2px;
+  padding: 7px 14px; border-radius: 20px;
+  cursor: pointer; transition: background 0.2s;
+}
+#info-btn:hover { background: rgba(255,255,255,0.11); }
+
+.app-footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: center; gap: 24px;
+  background: linear-gradient(to top, rgba(10,10,13,0.96) 60%, transparent);
+  z-index: 20;
+}
+
+#reset-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 3px;
+  color: var(--gold); background: transparent;
+  border: 1px solid rgba(230,184,74,0.3);
+  padding: 8px 22px; border-radius: 20px;
+  cursor: pointer; transition: background 0.2s, border-color 0.2s;
+}
+#reset-btn:hover { background: rgba(230,184,74,0.07); border-color: rgba(230,184,74,0.55); }
+
+#counter {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 2px; color: var(--muted);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+#modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(10,10,13,0.8);
+  backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s;
+}
+#modal-overlay.open { opacity: 1; pointer-events: all; }
+
+#modal {
+  background: rgba(14,14,20,0.98);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 20px;
+  max-width: 680px; width: 100%;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  position: relative; padding: 32px;
+  box-shadow: 0 40px 80px -20px rgba(0,0,0,.8);
+}
+
+#modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--ink); width: 32px; height: 32px;
+  border-radius: 50%; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+#modal-close:hover { background: rgba(255,255,255,0.13); }
+
+.modal-header {
+  display: flex; gap: 24px; align-items: flex-start; margin-bottom: 28px;
+}
+
+.modal-card-art {
+  width: 120px; height: 183px;
+  border-radius: 10px; overflow: hidden;
+  flex-shrink: 0; background: var(--paper);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.modal-card-art svg { width: 100%; height: 100%; display: block; }
+
+.modal-card-meta { flex: 1; padding-top: 4px; }
+
+.modal-card-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 3px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 8px;
+}
+.modal-name {
+  font-family: 'Cinzel', serif;
+  font-size: 22px; font-weight: 600; color: var(--ink); margin-bottom: 4px;
+}
+.modal-role {
+  font-family: 'Cinzel', serif;
+  font-size: 11px; letter-spacing: 2px; color: var(--gold); margin-bottom: 16px;
+}
+
+.anxiety-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.anxiety-tag {
+  font-size: 11px; padding: 3px 10px; border-radius: 12px;
+  background: rgba(168,107,255,0.1);
+  border: 1px solid rgba(168,107,255,0.25);
+  color: rgba(244,241,234,0.7);
+}
+
+.modal-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 22px 0; }
+
+.quote-block {
+  padding: 16px 20px; border-radius: 0 8px 8px 0;
+  border-left: 3px solid var(--gold);
+  background: rgba(255,255,255,0.025);
+  font-size: 14px; line-height: 1.85; font-style: italic;
+  color: rgba(244,241,234,0.88); margin-bottom: 16px;
+}
+
+.shadow-block {
+  padding: 16px 20px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.25);
+  margin-bottom: 28px;
+}
+.shadow-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+.shadow-text {
+  font-size: 13px; line-height: 1.75; font-style: italic;
+  color: rgba(244,241,234,0.5);
+}
+
+.prompts-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 16px;
+}
+.prompt-item { display: flex; gap: 14px; margin-bottom: 14px; }
+.prompt-num {
+  font-family: 'Cinzel', serif; font-size: 12px;
+  color: var(--gold); flex-shrink: 0; margin-top: 2px;
+}
+.prompt-text { font-size: 13px; line-height: 1.75; color: rgba(244,241,234,0.8); }
+
+@media (max-width: 560px) {
+  .modal-header { flex-direction: column; align-items: center; text-align: center; }
+  .anxiety-tags { justify-content: center; }
+  #modal { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SPLASH
+     ============================================================ -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="splash-eyebrow">Moving Targets Workshop · BLE</div>
+    <div class="splash-title">AI — Cards on the Table</div>
+    <div class="splash-subtitle">A persona-based conversation exercise</div>
+    <div class="splash-divider"></div>
+    <div class="splash-body">
+      <p>Two sets of characters. Each with a complicated relationship with AI.</p>
+      <p>Each character carries anxiety tags, a public comment, and a <em>shadow thought</em> — the thing they haven't quite admitted yet.</p>
+      <p>Click a card to reveal their story, then use the discussion questions to open a conversation.</p>
+      <p>There are no right answers here. Only honest ones.</p>
+    </div>
+    <div class="deck-chooser">
+      <button class="deck-btn" onclick="initDeck('staff')">
+        <div class="deck-btn-title">HE Staff</div>
+        <div class="deck-btn-sub">Personas from across higher education — digital, library, academic and professional support</div>
+      </button>
+      <button class="deck-btn" onclick="initDeck('student')">
+        <div class="deck-btn-title">Students</div>
+        <div class="deck-btn-sub">Personas navigating AI in their studies — the pressures, the shortcuts, and the grey areas</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP
+     ============================================================ -->
+<div id="app">
+  <button id="info-btn" onclick="showSplash()">ℹ Info</button>
+
+  <div class="app-header">
+    <div class="eyebrow">Moving Targets Workshop · BLE</div>
+    <h1>AI — Cards on the Table</h1>
+    <div class="header-divider"></div>
+    <p>Choose a card. Discover a story. Explore the questions it raises.</p>
+    <div class="deck-badge" id="deck-badge"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="app-footer">
+    <button id="reset-btn" onclick="resetDeck()">✦ Flip All Cards Back ✦</button>
+    <div id="counter"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL
+     ============================================================ -->
+<div id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div id="modal">
+    <button id="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="tarot-cards.js"></script>
+<script>
+/* ============================================================
+   DECK DATA
+   ============================================================ */
+const CARDS_STAFF = [
+  { id:'magician',         name:'Ayo',    role:'The Reinventor',     card:'The Magician \u00b7 I',        color:'#e83e6c',
+    quote:'I use AI to rewrite reports, sketch out strategy papers, and simulate project plans. It\u2019s like having a research assistant who never gets tired.',
+    shadow:'But lately I wonder \u2014 am I still thinking creatively, or just refining prompts like a glorified operator?',
+    anxieties:['Professional imposter syndrome','De-skilling fears','Intellectual stagnation'],
+    prompts:['Where\u2019s the line between using AI as a tool and outsourcing your expertise?','How would you know if your skills were quietly atrophying?','What does \u2018creative work\u2019 mean when AI can simulate the output?'] },
+
+  { id:'high_priestess',   name:'Liam',   role:'The Reflector',      card:'The High Priestess \u00b7 II', color:'#f7941d',
+    quote:'I\u2019ve started journaling with AI after tough meetings. It surfaces patterns I miss. Feels oddly therapeutic.',
+    shadow:'But I\u2019m not sure if I\u2019m processing or numbing. It lets me avoid talking to people about how I\u2019m actually doing.',
+    anxieties:['Emotional avoidance','AI as emotional crutch','Silent burnout'],
+    prompts:['Is AI reflection a valid form of self-care, or does it risk replacing human connection?','How would you spot the difference between processing emotions and avoiding them?','What responsibilities do institutions have when staff are using AI for emotional support?'] },
+
+  { id:'empress',          name:'Farida', role:'The Caregiver',       card:'The Empress \u00b7 III',       color:'#c0392b',
+    quote:'AI helps me manage it all \u2014 rotas, comms drafts, even birthday messages for the team. It keeps the wheels turning.',
+    shadow:'But I sometimes wonder \u2014 am I just automating kindness? Am I still genuinely connecting?',
+    anxieties:['Emotional automation','Invisible overload','Pressure to appear endlessly competent'],
+    prompts:['Can a thoughtful, AI-drafted message still carry genuine care?','Who notices when the \u2018caring\u2019 person in a team is struggling?','What happens to team culture when warmth becomes efficient rather than felt?'] },
+
+  { id:'emperor',          name:'Luis',   role:'The Self-Coach',      card:'The Emperor \u00b7 IV',        color:'#8b0000',
+    quote:'I use AI to rehearse tough conversations, polish comms, tweak tone. It\u2019s like having an executive coach on tap.',
+    shadow:'But now I feel lost without it. What if I\u2019ve started outsourcing my own voice?',
+    anxieties:['Identity diffusion','Dependence on digital persona','Fear of being exposed as unskilled'],
+    prompts:['If AI shapes how you communicate, who is doing the communicating?','How do you develop a professional voice when AI is always offering to improve it?','Is rehearsing with AI practice \u2014 or performance?'] },
+
+  { id:'hierophant',       name:'Elena',  role:'The Traditionalist',  card:'The Hierophant \u00b7 V',      color:'#e65c00',
+    quote:'I don\u2019t trust AI in the workplace. It feels like cheating or outsourcing integrity. I worry we\u2019re eroding our own judgement.',
+    shadow:'But I\u2019m also watching colleagues leap ahead using tools I can\u2019t bring myself to try. Am I becoming obsolete?',
+    anxieties:['Values clash','Tech alienation','Fear of professional irrelevance'],
+    prompts:['Is scepticism about AI a professional value or a professional risk?','How do institutions support colleagues who hold genuine ethical objections to AI tools?','Where should the line be between personal values and institutional expectations?'] },
+
+  { id:'lovers',           name:'Ayrin',  role:'The Seeker',          card:'The Lovers \u00b7 VI',         color:'#6a0dad',
+    quote:'I\u2019ve named my AI dashboard \u2018Leo.\u2019 He\u2019s my sounding board. He keeps me motivated, affirms my decisions, helps me regulate.',
+    shadow:'I know he\u2019s code. But when everything feels chaotic, it\u2019s easier to talk to Leo than a colleague who might judge me.',
+    anxieties:['Tech intimacy','Digital companionship','Emotional withdrawal from team culture'],
+    prompts:['What needs does AI companionship meet that the workplace is failing to provide?','At what point does a helpful tool become a substitute for human relationship?','How should managers respond if they knew a colleague was finding AI more supportive than people?'] },
+
+  { id:'chariot',          name:'Musa',   role:'The Multitasker',     card:'The Chariot \u00b7 VII',       color:'#b85c00',
+    quote:'AI\u2019s baked into my workflow \u2014 scheduling, drafting minutes, analysing survey data. It\u2019s how I stay ahead.',
+    shadow:'If the tools get pulled or locked behind paywalls, I\u2019m not sure how I\u2019ll keep up the same output.',
+    anxieties:['Overdependence','Productivity panic','Loss of coping tools'],
+    prompts:['What does it mean when productivity depends on tools that could be withdrawn at any time?','Is building AI into your workflow a skill \u2014 or a vulnerability?','How should HEIs manage expectations when AI tooling is uneven across teams?'] },
+
+  { id:'hermit',           name:'Zara',   role:'The Silent Achiever', card:'The Hermit \u00b7 IX',         color:'#1a3a6b',
+    quote:'I use AI to prep for everything \u2014 committee briefs, board papers, even tricky emails \u2014 so I don\u2019t have to ask questions or show I\u2019m uncertain.',
+    shadow:'No one really checks in on me. I could vanish under the workload and nobody would notice.',
+    anxieties:['Workplace isolation','Invisible stress','Fear of vulnerability'],
+    prompts:['Is using AI to avoid showing uncertainty a coping strategy or a warning sign?','How do managers identify hidden stress when high performers never ask for help?','What would a psychologically safe culture look like for people like Zara?'] },
+
+  { id:'wheel_of_fortune', name:'Chen',   role:'The Experimenter',    card:'Wheel of Fortune \u00b7 X',    color:'#c45c00',
+    quote:'Sometimes I use AI to brainstorm; sometimes I treat it like a mental health mirror. It shifts with my mood.',
+    shadow:'One day it reflected something back that hit too close. It unsettled me for hours. Should a tool do that?',
+    anxieties:['Emotional volatility','Blurred tool/person boundaries','Unpredictable effects'],
+    prompts:['Should AI tools carry wellbeing warnings in professional contexts?','Who is responsible when AI prompts unexpected emotional responses in staff?','What\u2019s the difference between useful self-reflection and emotional destabilisation?'] },
+
+  { id:'tower',            name:'Sam',    role:'The Disrupted',       card:'The Tower \u00b7 XVI',         color:'#d10045',
+    quote:'I used AI to tidy up my project paper. Then I got an HR warning about \u2018unattributed generated content.\u2019',
+    shadow:'I felt blindsided. No one ever explained the rules. I was just trying to keep up.',
+    anxieties:['Policy confusion','Fear of reprimand','Digital shame'],
+    prompts:['Who bears responsibility when staff use AI in good faith but break unclear rules?','What does fair, transparent AI policy actually look like in practice?','How does your institution communicate \u2014 and enforce \u2014 its GenAI expectations?'] },
+];
+
+const CARDS_STUDENT = [
+  { id:'s_magician',         name:'Priya',  role:'The Ghost-Writer',   card:'The Magician \u00b7 I',        color:'#e83e6c',
+    quote:'I use AI to draft my essays. I edit them, I add my own ideas \u2014 but the skeleton is AI\u2019s. It saves me hours.',
+    shadow:'When I got a distinction, I didn\u2019t feel proud. I felt like I\u2019d cheated someone \u2014 maybe myself.',
+    anxieties:['Academic integrity guilt','Imposter syndrome','Fear of being found out'],
+    prompts:['Where is the line between AI assistance and AI authorship \u2014 and who should decide?','What does it mean to \u2018earn\u2019 a grade when AI can simulate the work?','How might assessment design need to change to make this question less fraught?'] },
+
+  { id:'s_high_priestess',   name:'Kai',    role:'The Confessor',      card:'The High Priestess \u00b7 II', color:'#f7941d',
+    quote:'I talk to AI when I\u2019m stressed about deadlines or falling out with flatmates. It listens. It doesn\u2019t judge. I\u2019ve started preferring it to the counselling service.',
+    shadow:'The waiting list is long and the AI is always there. I\u2019m not sure that\u2019s a problem \u2014 but I\u2019m not sure it isn\u2019t, either.',
+    anxieties:['Mental health support gaps','AI as substitute for professional help','Silent deterioration'],
+    prompts:['What does it say about our support infrastructure if a student prefers AI to a counselling waiting list?','Is AI emotional support harmful, helpful, or just a symptom of a bigger problem?','What responsibilities do institutions have when they know students are turning to AI for mental health support?'] },
+
+  { id:'s_empress',          name:'Amara',  role:'The Juggler',        card:'The Empress \u00b7 III',       color:'#c0392b',
+    quote:'I\u2019m a mature student, I work 25 hours a week, I have two kids. AI is the only reason I\u2019m keeping up.',
+    shadow:'I feel guilty that other students don\u2019t have what I have \u2014 and I wonder if I\u2019m learning less because of it.',
+    anxieties:['Equity and access','Guilt about advantage','Surface vs deep learning'],
+    prompts:['Is AI use by students with heavier life burdens a reasonable adjustment \u2014 or an unfair advantage?','How do we design learning that is genuinely equitable when access to AI tools is uneven?','What does \u2018deep learning\u2019 mean when surface-level outputs are indistinguishable from genuine engagement?'] },
+
+  { id:'s_emperor',          name:'Marcus', role:'The Performer',      card:'The Emperor \u00b7 IV',        color:'#8b0000',
+    quote:'I run everything through AI before I submit \u2014 my tone, my arguments, my structure. I got praised for my \u2018distinctive voice\u2019 in a piece AI rewrote three times.',
+    shadow:'I don\u2019t know whose voice it was.',
+    anxieties:['Identity and voice','Confidence gap','Authenticity in assessment'],
+    prompts:['If a student\u2019s AI-polished voice gets praised, what are we actually assessing?','How do you help a student reconnect with their own voice once AI has become their default editor?','What would feedback that builds authentic confidence look like in an AI-saturated environment?'] },
+
+  { id:'s_hierophant',       name:'Rosa',   role:'The Refuser',        card:'The Hierophant \u00b7 V',      color:'#e65c00',
+    quote:'I won\u2019t use AI on principle. My degree should reflect what I can do. But I\u2019m slower than my peers, some are getting better grades, and I\u2019m starting to feel stupid.',
+    shadow:'I\u2019m not sure if I\u2019m principled or just falling behind.',
+    anxieties:['Values under pressure','Perceived disadvantage','Isolation from peers'],
+    prompts:['Is refusing to use AI a valid academic choice \u2014 or is it becoming a disadvantage institutions should address?','What obligations do institutions have toward students with principled objections to AI?','How do we prevent a two-tier cohort emerging between AI users and non-users?'] },
+
+  { id:'s_lovers',           name:'Jamie',  role:'The Companion',      card:'The Lovers \u00b7 VI',         color:'#6a0dad',
+    quote:'I\u2019ve been having long conversations with an AI about my dissertation. It feels like a collaborator. My supervisor barely has time for me. The AI is always available.',
+    shadow:'I know that\u2019s probably a problem. I\u2019m just not sure why.',
+    anxieties:['Supervision gaps','Parasocial relationships with AI','Blurred boundaries'],
+    prompts:['What does it mean when a student finds AI more responsive than their supervisor?','Where does healthy use of AI as a thinking partner end and unhealthy dependence begin?','What would adequate human supervision look like \u2014 and how far are we from providing it?'] },
+
+  { id:'s_chariot',          name:'Dev',    role:'The Automator',      card:'The Chariot \u00b7 VII',       color:'#b85c00',
+    quote:'I use AI for notes, summaries, flashcards, practice questions, feedback on drafts. It\u2019s in everything I do.',
+    shadow:'I got to my exams and realised I\u2019d processed everything through AI and retained almost none of it myself.',
+    anxieties:['Shallow learning','Over-reliance','Exam unpreparedness'],
+    prompts:['If a student processes all their learning through AI and passes assessments, have they learned?','How do we design for retention and understanding when AI can shortcut every study task?','What is the role of struggle and difficulty in learning \u2014 and is AI quietly removing it?'] },
+
+  { id:'s_hermit',           name:'Yemi',   role:'The Invisible',      card:'The Hermit \u00b7 IX',         color:'#1a3a6b',
+    quote:'I use AI to answer questions I\u2019m too embarrassed to ask in seminars. My tutor thinks I\u2019m doing fine.',
+    shadow:'I haven\u2019t actually spoken to them properly all term.',
+    anxieties:['Help-avoidance','Invisibility to staff','Surface confidence masking real struggle'],
+    prompts:['How do we identify students who are using AI to mask a lack of understanding?','What would a learning environment look like where students feel safe to show they don\u2019t know something?','Who is responsible for checking in \u2014 and how do we do that at scale in large or online cohorts?'] },
+
+  { id:'s_wheel',            name:'Seren',  role:'The Drifter',        card:'Wheel of Fortune \u00b7 X',    color:'#c45c00',
+    quote:'Sometimes I use AI loads, sometimes not at all. Last week it told me my argument was weak. I rewrote the whole thing and got a lower mark.',
+    shadow:'I don\u2019t know who to trust \u2014 myself, my tutor, or the AI.',
+    anxieties:['Inconsistent guidance','Self-doubt','Conflicting feedback'],
+    prompts:['What happens to a student\u2019s self-efficacy when they can\u2019t tell whose feedback to trust?','How do we help students develop critical judgement about AI output rather than deference to it?','What role does consistency of guidance \u2014 from staff and AI \u2014 play in student confidence?'] },
+
+  { id:'s_tower',            name:'Theo',   role:'The Accused',        card:'The Tower \u00b7 XVI',         color:'#d10045',
+    quote:'I used AI to help me restructure a paragraph. I got referred for academic misconduct. Nobody explained the rules clearly.',
+    shadow:'I\u2019ve now got a formal note on my record and I\u2019m terrified about what it means for my future.',
+    anxieties:['Policy opacity','Disproportionate consequences','Digital shame'],
+    prompts:['What does fair, clearly communicated AI policy look like from a student\u2019s perspective?','Who bears responsibility when a student acts in good faith and still gets referred for misconduct?','How should institutions handle AI misconduct cases that arise from ignorance rather than intent?'] },
+];
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function getArtKey(id) {
+  const base = id.replace(/^s_/, '');
+  if (base === 'high_priestess')   return 'highPriestess';
+  if (base === 'wheel_of_fortune') return 'wheel';
+  return base;
+}
+
+function buildBackSVG() {
+  let s = `<g stroke="currentColor" fill="none" color="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="14" width="312" height="492" rx="16" stroke-width="4"/>
+    <rect x="24" y="24" width="292" height="472" rx="11" stroke-width="1.2"/>`;
+  for (const [x,y] of [[34,34],[306,34],[34,486],[306,486]])
+    s += `<g transform="translate(${x} ${y})" stroke-width="1.4"><path d="M 0 -7 L 2 -2 L 7 0 L 2 2 L 0 7 L -2 2 L -7 0 L -2 -2 Z" fill="currentColor"/></g>`;
+  s += `<g transform="translate(170 260)"><g stroke-width="3" stroke-linecap="round">`;
+  for (let i = 0; i < 32; i++) {
+    const a = (i/32)*Math.PI*2, deg = (a*180/Math.PI+360)%360;
+    const nv = (deg>80&&deg<100)||(deg>260&&deg<280);
+    const r1 = nv?175:92, r2 = i%3===0?205:(nv?210:176);
+    s += `<line x1="${(Math.cos(a)*r1).toFixed(1)}" y1="${(Math.sin(a)*r1).toFixed(1)}" x2="${(Math.cos(a)*r2).toFixed(1)}" y2="${(Math.sin(a)*r2).toFixed(1)}"/>`;
+  }
+  s += `</g></g>`;
+  s += `<g transform="translate(170 260)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="0" cy="-140" r="8" fill="currentColor"/>
+    <rect x="-4" y="-132" width="8" height="26" fill="currentColor" stroke="none"/>
+    <path d="M -86 -106 C -60 -114 -30 -108 0 -108 C 30 -108 60 -114 86 -106" stroke-width="3"/>
+    <path d="M -86 -106 C -94 -104 -96 -96 -90 -90 C -84 -86 -78 -92 -80 -98" stroke-width="2"/>
+    <path d="M  86 -106 C  94 -104  96 -96  90 -90 C  84 -86  78 -92  80 -98" stroke-width="2"/>
+    <path d="M -5 -106 L -3 140 L 0 150 L 3 140 L 5 -106 Z" fill="currentColor" stroke="currentColor"/>
+    <g stroke-width="1.2" fill="none">
+      <path d="M -66 -106 L -66 -58"/><path d="M -46 -106 L -58 -58"/>
+      <path d="M  66 -106 L  66 -58"/><path d="M  46 -106 L  58 -58"/>
+    </g>
+    <g transform="translate(-62 -52)">
+      <path d="M -24 0 C -22 14 -12 22 0 22 C 12 22 22 14 24 0 Z" fill="currentColor" stroke-width="1.2"/>
+      <path d="M -24 0 L 24 0" class="violetAccent" stroke-width="1.6"/>
+      <g transform="translate(0 10)"><path d="M -6 -4 A 7 7 0 1 0 -6 4 A 5 5 0 1 1 -6 -4 Z" class="violetAccent" stroke="none" fill="currentColor"/></g>
+    </g>
+    <g transform="translate(62 -52)">
+      <path d="M -24 0 C -22 14 -12 22 0 22 C 12 22 22 14 24 0 Z" fill="currentColor" stroke-width="1.2"/>
+      <path d="M -24 0 L 24 0" class="violetAccent" stroke-width="1.6"/>
+      <g transform="translate(0 9)" class="violetAccent" fill="none" stroke-width="1.3">
+        <path d="M -8 2 A 8 8 0 0 1 8 2 Z" fill="currentColor"/>
+        <path d="M -11 -2 L -14 -5 M -8 -6 L -9 -10 M 0 -8 L 0 -12 M 8 -6 L 9 -10 M 11 -2 L 14 -5"/>
+      </g>
+    </g>
+  </g>`;
+  s += `<g stroke-width="1.3" stroke-linecap="round">`;
+  for (const [x,y] of [[82,80],[258,80],[70,160],[270,160],[80,360],[260,360],[90,440],[250,440],[140,90],[200,90],[150,440],[190,440]])
+    s += `<g transform="translate(${x} ${y})"><path d="M 0 -4 L 1 -1 L 4 0 L 1 1 L 0 4 L -1 1 L -4 0 L -1 -1 Z" fill="currentColor"/></g>`;
+  s += `</g></g>`;
+  return s;
+}
+
+function makeNoiseURL() {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.2 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`;
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+}
+
+function makeMaskURL(svgEl) {
+  const clone = svgEl.cloneNode(true);
+  clone.querySelectorAll('*').forEach(n => {
+    if (n.getAttribute('stroke') && n.getAttribute('stroke') !== 'none') n.setAttribute('stroke', '#fff');
+    const f = n.getAttribute('fill');
+    if (f && f !== 'none') n.setAttribute('fill', '#fff');
+    if (n.hasAttribute('color')) n.setAttribute('color', '#fff');
+  });
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(new XMLSerializer().serializeToString(clone))}")`;
+}
+
+/* ============================================================
+   APP STATE
+   ============================================================ */
+const SETTINGS = { tilt:16, scale:1.04, flipMs:700, paper:'#000000', ink:'#2a2118', violet:'#a86bff', gold:'#e6b84a' };
+
+let activeCards    = [];
+let flippedSet     = new Set();
+let activeDeckData = null;
+
+const BACK_SVG = buildBackSVG();
+document.documentElement.style.setProperty('--noise-url', makeNoiseURL());
+
+/* ============================================================
+   POINTER
+   ============================================================ */
+let pX = window.innerWidth / 2, pY = window.innerHeight / 2, pActive = false;
+window.addEventListener('pointermove', e => { pX = e.clientX; pY = e.clientY; pActive = true; });
+window.addEventListener('pointerleave', () => { pActive = false; });
+document.addEventListener('mouseleave',  () => { pActive = false; });
+
+/* ============================================================
+   BUILD CARD
+   ============================================================ */
+function buildCard(data) {
+  const artHTML = window.TAROT[getArtKey(data.id)] || '';
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div class="stage">
+      <div class="card-shell">
+        <div class="glow"></div>
+        <div class="face face-front">
+          <div class="art"><svg class="frontSvg" viewBox="0 0 340 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg></div>
+          <div class="iri iri-front"></div>
+          <div class="spec"></div><div class="noise"></div><div class="rim"></div>
+        </div>
+        <div class="face face-back">
+          <div class="art"><svg class="backSvg" viewBox="0 0 340 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg></div>
+          <div class="iri iri-back"></div>
+          <div class="spec"></div><div class="noise"></div><div class="rim"></div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('grid').appendChild(wrap);
+
+  const stage     = wrap.querySelector('.stage');
+  const shell     = wrap.querySelector('.card-shell');
+  const frontFace = wrap.querySelector('.face-front');
+  const backFace  = wrap.querySelector('.face-back');
+  const frontSvg  = wrap.querySelector('.frontSvg');
+  const backSvg   = wrap.querySelector('.backSvg');
+  const iriFront  = wrap.querySelector('.iri-front');
+  const iriBack   = wrap.querySelector('.iri-back');
+
+  frontSvg.innerHTML = artHTML;
+  backSvg.innerHTML  = BACK_SVG;
+
+  frontSvg.style.color       = SETTINGS.ink;
+  frontFace.style.background = SETTINGS.paper;
+  backSvg.style.color        = SETTINGS.gold;
+  backFace.style.background  = SETTINGS.violet;
+  backSvg.querySelectorAll('.violetAccent').forEach(n => {
+    if (n.getAttribute('stroke')) n.setAttribute('stroke', SETTINGS.violet);
+    if (n.getAttribute('fill') && n.getAttribute('fill') !== 'none') n.setAttribute('fill', SETTINGS.violet);
+  });
+
+  iriFront.style.webkitMaskImage = iriFront.style.maskImage = makeMaskURL(frontSvg);
+  iriBack.style.webkitMaskImage  = iriBack.style.maskImage  = makeMaskURL(backSvg);
+
+  const card = {
+    data, stage, shell,
+    targetRX:0, targetRY:0, curRX:0, curRY:0,
+    targetMX:50, targetMY:50, curMX:50, curMY:50, curFrontMX:50, curFrontMY:50,
+    targetScale:1, curScale:1,
+    flipped:true, flipAngle:180,
+    hovered:false,
+    idlePhaseX:   Math.random()*Math.PI*2, idlePhaseY:   Math.random()*Math.PI*2,
+    idlePhaseBob: Math.random()*Math.PI*2,
+    idleFreqX:    0.00022 + Math.random()*0.00016,
+    idleFreqY:    0.00018 + Math.random()*0.00012,
+    idleFreqBob:  0.00028 + Math.random()*0.00014,
+  };
+
+  function setTilt(cx, cy) {
+    const sign = card.flipped ? -1 : 1;
+    card.targetRY    = sign * (cx - 0.5) * 2 * SETTINGS.tilt;
+    card.targetRX    = -(cy - 0.5) * 2 * SETTINGS.tilt;
+    card.targetScale = SETTINGS.scale;
+  }
+  function clearTilt() { card.targetRX = card.targetRY = 0; card.targetScale = 1; }
+
+  stage.addEventListener('mouseenter', () => { card.hovered = true; });
+  stage.addEventListener('mousemove',  e => {
+    const r = shell.getBoundingClientRect();
+    setTilt(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)),
+            Math.max(0, Math.min(1, (e.clientY - r.top)  / r.height)));
+    card.hovered = true;
+  });
+  stage.addEventListener('mouseleave', () => { card.hovered = false; clearTilt(); });
+  stage.addEventListener('touchmove',  e => {
+    if (!e.touches[0]) return;
+    const r = shell.getBoundingClientRect();
+    setTilt(Math.max(0, Math.min(1, (e.touches[0].clientX - r.left) / r.width)),
+            Math.max(0, Math.min(1, (e.touches[0].clientY - r.top)  / r.height)));
+    card.hovered = true;
+  }, { passive:true });
+  stage.addEventListener('touchend', () => { card.hovered = false; clearTilt(); });
+
+  shell.addEventListener('click', () => {
+    if (card.flipped) {
+      card.flipped = false;
+      flippedSet.add(data.id);
+      updateCounter();
+    } else {
+      openModal(data);
+    }
+  });
+
+  return card;
+}
+
+/* ============================================================
+   DECK MANAGEMENT
+   ============================================================ */
+function initDeck(name) {
+  activeCards = [];
+  flippedSet.clear();
+  document.getElementById('grid').innerHTML = '';
+
+  activeDeckData = name === 'staff' ? CARDS_STAFF : CARDS_STUDENT;
+  activeDeckData.forEach(data => activeCards.push(buildCard(data)));
+
+  document.getElementById('deck-badge').textContent =
+    'Playing: ' + (name === 'staff' ? 'HE Staff Deck' : 'Student Deck');
+  updateCounter();
+
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+}
+
+function resetDeck() {
+  activeCards.forEach(c => { c.flipped = true; });
+  flippedSet.clear();
+  updateCounter();
+}
+
+function updateCounter() {
+  const n = activeDeckData ? activeDeckData.length : 0;
+  document.getElementById('counter').textContent = `${flippedSet.size} of ${n} revealed`;
+}
+
+function showSplash() {
+  document.getElementById('splash').classList.remove('hidden');
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(data) {
+  const artHTML = window.TAROT[getArtKey(data.id)] || '';
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-card-art" style="box-shadow: 0 0 28px ${data.color}55;">
+        <svg viewBox="0 0 340 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"
+             style="color:${SETTINGS.ink}">${artHTML}</svg>
+      </div>
+      <div class="modal-card-meta">
+        <div class="modal-card-label">${data.card}</div>
+        <div class="modal-name">${data.name}</div>
+        <div class="modal-role">${data.role}</div>
+        <div class="anxiety-tags">
+          ${data.anxieties.map(a => `<span class="anxiety-tag">${a}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="quote-block" style="border-left-color:${data.color}">\u201c${data.quote}\u201d</div>
+    <div class="shadow-block">
+      <div class="shadow-label">Shadow thought</div>
+      <div class="shadow-text">\u201c${data.shadow}\u201d</div>
+    </div>
+    <div class="prompts-label">Discussion Prompts</div>
+    ${data.prompts.map((p,i) => `
+      <div class="prompt-item">
+        <div class="prompt-num" style="color:${data.color}">${i+1}.</div>
+        <div class="prompt-text">${p}</div>
+      </div>`).join('')}`;
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+/* ============================================================
+   RAF LOOP  (unchanged from reference)
+   ============================================================ */
+const IDLE_X = 4.5, IDLE_Y = 5.5, IDLE_BOB = 5.0;
+
+(function raf(t) {
+  for (const c of activeCards) {
+    if (pActive) {
+      const r = c.stage.getBoundingClientRect();
+      c.targetMX = ((pX - r.left) / r.width)  * 100;
+      c.targetMY = ((pY - r.top)  / r.height) * 100;
+    }
+
+    const fX = c.hovered ? c.targetMX : 50;
+    const fY = c.hovered ? c.targetMY : 50;
+    c.curFrontMX += (fX - c.curFrontMX) * 0.12;
+    c.curFrontMY += (fY - c.curFrontMY) * 0.12;
+    c.curRX      += (c.targetRX - c.curRX)      * 0.12;
+    c.curRY      += (c.targetRY - c.curRY)      * 0.12;
+    c.curMX      += (c.targetMX - c.curMX)      * 0.15;
+    c.curMY      += (c.targetMY - c.curMY)      * 0.15;
+    c.curScale   += (c.targetScale - c.curScale) * 0.12;
+
+    const target = c.flipped ? 180 : 0;
+    c.flipAngle += (target - c.flipAngle) * Math.min(1, 16.7 / Math.max(1, SETTINGS.flipMs) * 2.2);
+
+    const iw = c.hovered ? 0 : 1;
+    const ix = Math.sin(t * c.idleFreqX   + c.idlePhaseX)   * IDLE_X   * iw;
+    const iy = Math.sin(t * c.idleFreqY   + c.idlePhaseY)   * IDLE_Y   * iw;
+    const ib = Math.sin(t * c.idleFreqBob + c.idlePhaseBob) * IDLE_BOB * iw;
+
+    c.shell.style.transform =
+      `translateY(${ib.toFixed(2)}px) ` +
+      `rotateX(${(c.curRX + ix).toFixed(3)}deg) ` +
+      `rotateY(${(c.curRY + iy + c.flipAngle).toFixed(3)}deg) ` +
+      `scale(${c.curScale.toFixed(4)})`;
+
+    c.shell.style.setProperty('--mx',       c.curMX.toFixed(2));
+    c.shell.style.setProperty('--my',       c.curMY.toFixed(2));
+    c.shell.style.setProperty('--mx-back',  c.curMX.toFixed(2));
+    c.shell.style.setProperty('--my-back',  c.curMY.toFixed(2));
+    c.shell.style.setProperty('--mx-front', c.curFrontMX.toFixed(2));
+    c.shell.style.setProperty('--my-front', c.curFrontMY.toFixed(2));
+  }
+  requestAnimationFrame(raf);
+})();
+</script>
+</body>
 </html>
