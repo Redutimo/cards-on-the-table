@@ -571,9 +571,9 @@ body {
 }
 
 .art { position: absolute; inset: 0; }
-.art svg { width: 100%; height: 100%; display: block; color: var(--ink-col); }
+.art svg { width: 100%; height: 100%; display: block; color: rgba(240,234,214,0.55); }
 
-.face-back .art svg { color: var(--gold-tarot); }
+.face-back .art svg { color: rgba(255,255,255,0.9); }
 .face-back .art svg .violetAccent { stroke: var(--violet); fill: var(--violet); }
 
 .iri {
