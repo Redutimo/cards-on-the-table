@@ -14,7 +14,7 @@
   --bg-a: #0a0a0d;
   --bg-b: #15151b;
   --ink: #f4f1ea;
-  --muted: #7a7a9a;
+  --muted: #9898b8;
 
   /* Card visual — keep in sync with the reference design */
   --iri-strength: 0.95;
@@ -22,12 +22,12 @@
   --iri-blur: 2px;
   --iri-blend: color-dodge;
   --spec-size: 230px;
-  --spec-strength: 0.8;
-  --spec-opacity: 1;
+  --spec-strength: 0.35;
+  --spec-opacity: 0.55;
   --spec-blend: overlay;
   --noise-strength: 0.22;
   --noise-blend: overlay;
-  --glow-strength: 0.9;
+  --glow-strength: 0.4;
   --glow-blur: 44px;
   --glow-hue: 290;
   --rim-strength: 0.7;
@@ -206,7 +206,7 @@ html, body {
 }
 .splash-body {
   font-size: 16px; line-height: 1.9;
-  color: rgba(244,241,234,0.72); margin-bottom: 48px;
+  color: rgba(244,241,234,0.85); margin-bottom: 48px;
   max-width: 560px; margin-left: auto; margin-right: auto;
 }
 .splash-body p { margin-bottom: 12px; }
@@ -233,7 +233,7 @@ html, body {
   font-family: 'Cinzel', serif;
   font-size: 18px; font-weight: 600; margin-bottom: 12px;
 }
-.deck-btn-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.deck-btn-sub { font-size: 14px; color: rgba(244,241,234,0.7); line-height: 1.6; }
 
 /* ============================================================
    APP CHROME
@@ -262,7 +262,7 @@ html, body {
   margin: 0 auto 18px;
 }
 .app-header p {
-  font-size: 15px; color: rgba(244,241,234,0.6);
+  font-size: 15px; color: rgba(244,241,234,0.78);
   line-height: 1.7; margin-bottom: 18px;
 }
 .deck-badge {
@@ -363,18 +363,22 @@ html, body {
 #modal-close:hover { background: rgba(255,255,255,0.13); }
 
 .modal-header {
-  display: flex; gap: 36px; align-items: flex-start; margin-bottom: 32px;
+  display: flex; gap: 36px; align-items: stretch; margin-bottom: 32px;
 }
 
 .modal-card-art {
-  width: 220px; height: 336px;
+  width: 200px; height: 306px;
   border-radius: 14px; overflow: hidden;
   flex-shrink: 0; background: var(--paper);
   border: 1px solid rgba(255,255,255,0.09);
+  align-self: flex-start;
 }
 .modal-card-art svg { width: 100%; height: 100%; display: block; }
 
-.modal-card-meta { flex: 1; padding-top: 8px; }
+.modal-card-meta {
+  flex: 1; padding-top: 8px;
+  display: flex; flex-direction: column;
+}
 
 .modal-card-label {
   font-family: 'Cinzel', serif;
@@ -390,57 +394,60 @@ html, body {
   font-size: 13px; letter-spacing: 2px; color: var(--gold); margin-bottom: 20px;
 }
 
-.anxiety-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.anxiety-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0; }
 .anxiety-tag {
   font-size: 12px; padding: 5px 14px; border-radius: 14px;
-  background: rgba(168,107,255,0.1);
-  border: 1px solid rgba(168,107,255,0.25);
-  color: rgba(244,241,234,0.75);
+  background: rgba(168,107,255,0.12);
+  border: 1px solid rgba(168,107,255,0.3);
+  color: rgba(244,241,234,0.88);
 }
 
-.modal-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 28px 0; }
+.modal-spacer { flex: 1; min-height: 20px; }
+
+.section-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px; margin-top: 20px;
+}
+.modal-card-meta .section-label:first-of-type { margin-top: 16px; }
+
+.modal-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 28px 0; }
 
 .quote-block {
-  padding: 20px 24px; border-radius: 0 10px 10px 0;
+  padding: 16px 20px; border-radius: 0 10px 10px 0;
   border-left: 3px solid var(--gold);
-  background: rgba(255,255,255,0.025);
-  font-size: 16px; line-height: 1.9; font-style: italic;
-  color: rgba(244,241,234,0.9); margin-bottom: 20px;
+  background: rgba(255,255,255,0.03);
+  font-size: 15px; line-height: 1.9; font-style: italic;
+  color: rgba(244,241,234,0.92);
 }
 
 .shadow-block {
   padding: 20px 24px; border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.07);
-  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.2);
   margin-bottom: 32px;
 }
-.shadow-label {
-  font-family: 'Cinzel', serif;
-  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 10px;
-}
+.shadow-block .section-label { margin-top: 0; }
 .shadow-text {
   font-size: 15px; line-height: 1.8; font-style: italic;
-  color: rgba(244,241,234,0.55);
+  color: rgba(244,241,234,0.8);
 }
 
-.prompts-label {
-  font-family: 'Cinzel', serif;
-  font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 20px;
-}
-.prompt-item { display: flex; gap: 18px; margin-bottom: 18px; }
+.prompts-section .section-label { margin-top: 0; margin-bottom: 16px; }
+.prompt-item { display: flex; gap: 18px; margin-bottom: 16px; }
 .prompt-num {
   font-family: 'Cinzel', serif; font-size: 14px;
   color: var(--gold); flex-shrink: 0; margin-top: 2px;
 }
-.prompt-text { font-size: 15px; line-height: 1.8; color: rgba(244,241,234,0.85); }
+.prompt-text { font-size: 15px; line-height: 1.8; color: rgba(244,241,234,0.88); }
 
 @media (max-width: 640px) {
   .modal-header { flex-direction: column; align-items: center; text-align: center; }
   .anxiety-tags { justify-content: center; }
   #modal { padding: 28px 20px; }
-  .modal-card-art { width: 160px; height: 245px; }
+  .modal-card-art { width: 150px; height: 230px; align-self: center; }
+  .modal-card-meta { align-items: center; }
+  .quote-block { text-align: left; }
 }
 </style>
 </head>
@@ -853,7 +860,9 @@ function initDeck(name) {
 }
 
 function resetDeck() {
-  activeCards.forEach(c => { c.flipped = true; });
+  activeCards.forEach((c, i) => {
+    setTimeout(() => { c.flipped = true; }, i * 90);
+  });
   flippedSet.clear();
   updateCounter();
 }
@@ -875,7 +884,7 @@ function openModal(data) {
 
   document.getElementById('modal-content').innerHTML = `
     <div class="modal-header">
-      <div class="modal-card-art" style="box-shadow: 0 0 28px ${data.color}55;">
+      <div class="modal-card-art" style="box-shadow: 0 0 40px ${data.color}44;">
         <svg viewBox="0 0 340 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"
              style="color:${SETTINGS.ink}">${artHTML}</svg>
       </div>
@@ -886,20 +895,24 @@ function openModal(data) {
         <div class="anxiety-tags">
           ${data.anxieties.map(a => `<span class="anxiety-tag">${a}</span>`).join('')}
         </div>
+        <div class="modal-spacer"></div>
+        <div class="section-label">What they say</div>
+        <div class="quote-block" style="border-left-color:${data.color}">\u201c${data.quote}\u201d</div>
       </div>
     </div>
     <div class="modal-divider"></div>
-    <div class="quote-block" style="border-left-color:${data.color}">\u201c${data.quote}\u201d</div>
     <div class="shadow-block">
-      <div class="shadow-label">Shadow thought</div>
+      <div class="section-label">Shadow thought</div>
       <div class="shadow-text">\u201c${data.shadow}\u201d</div>
     </div>
-    <div class="prompts-label">Discussion Prompts</div>
-    ${data.prompts.map((p,i) => `
-      <div class="prompt-item">
-        <div class="prompt-num" style="color:${data.color}">${i+1}.</div>
-        <div class="prompt-text">${p}</div>
-      </div>`).join('')}`;
+    <div class="prompts-section">
+      <div class="section-label">Discussion prompts</div>
+      ${data.prompts.map((p,i) => `
+        <div class="prompt-item">
+          <div class="prompt-num" style="color:${data.color}">${i+1}.</div>
+          <div class="prompt-text">${p}</div>
+        </div>`).join('')}
+    </div>`;
 
   document.getElementById('modal-overlay').classList.add('open');
 }
